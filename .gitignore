@@ -1,0 +1,12 @@
+vendor/*/*
+/.vendor-new
+gin.log
+dump.rdb
+
+.DS_Store
+*.out
+db/data/*
+!.gitkeep
+.env
+/app
+/tmp
