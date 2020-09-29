@@ -5,26 +5,15 @@ import (
 
 	"app/model"
 	"app/request"
+	"app/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"gopkg.in/go-playground/validator.v9"
 )
 
-// getの処理
-func GetUsers(c *gin.Context) {
-	var users []model.User
-
-	DB := c.MustGet("db").(*gorm.DB)
-
-	DB.Find(&users)
-
-	//
-	c.JSON(http.StatusOK, users)
-}
-
-// postの処理
-func PostUser(c *gin.Context) {
+// ユーザーを作成
+func CreateUser(c *gin.Context) {
 	var req request.User
 	DB := c.MustGet("db").(*gorm.DB)
 
@@ -42,10 +31,20 @@ func PostUser(c *gin.Context) {
 		return
 	}
 
+	// パスワードを暗号化
+	password, err := util.PasswordEncrypt(req.Password)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	// userのデータを格納
 	user := model.User{
-		Name:    req.Name,
-		Context: req.Context,
+		Name:        req.Name,
+		Email:       req.Email,
+		Password:    password,
+		Description: req.Description,
 	}
 
 	// userをAPIに格納

@@ -3,6 +3,8 @@ package model
 type User struct {
 	Model
 
-	Name    string `json:name`
-	Context string `json:context`
+	Name        string `json:name`
+	Password    string `json:password`
+	Email       string `json:email`
+	Description string `json:description`
 }

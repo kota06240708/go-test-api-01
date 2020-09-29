@@ -12,8 +12,7 @@ func StartRouter() *gin.Engine {
 
 	engine.Use(middleware.SetUp)
 
-	engine.GET("/", controller.GetUsers)
-	engine.POST("/", controller.PostUser)
+	engine.POST("/user", controller.CreateUser)
 
 	return engine
 }
