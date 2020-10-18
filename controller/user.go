@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"app/middleware"
 	"app/model"
 	"app/request"
 	"app/util"
@@ -11,6 +12,10 @@ import (
 	"github.com/jinzhu/gorm"
 	"gopkg.in/go-playground/validator.v9"
 )
+
+func LoginUser(c *gin.Context) {
+	middleware.AuthMiddleware.LoginHandler(c)
+}
 
 // ユーザーを作成
 func CreateUser(c *gin.Context) {
@@ -53,7 +58,8 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status": 200,
-	})
+	// パスワードを空にする。
+	req.Password = ""
+
+	c.JSON(http.StatusOK, req)
 }
