@@ -16,11 +16,12 @@ func StartRouter() *gin.Engine {
 	engine.POST("/login", controller.LoginUser)
 	engine.PATCH("/comment", controller.CreateComment)
 
+	// jwtのミドルウエアを噛ませる
 	engine.Use(middleware.AuthMiddleware.MiddlewareFunc())
 	{
 		engine.POST("/test", func(c *gin.Context) {
 			c.JSON(200, gin.H{
-				"message": "pong",
+				"user": "pong",
 			})
 		})
 	}

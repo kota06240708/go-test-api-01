@@ -79,19 +79,42 @@ func authMiddleware() *jwt.GinJWTMiddleware {
 			return jwt.MapClaims{}
 		},
 
+		// ===========================================
+		// Middleware (token確認 +  tokenのデータを取得)
+		// ===========================================
+
 		// MiddlewareFuncを使うと呼ばれる
 		// tokenの中身を確認、idを取得してユーザー情報があるか確認する
 		IdentityHandler: func(c *gin.Context) interface{} {
+			// dbを取得
+			DB := c.MustGet("db").(*gorm.DB)
+
+			// tokenの中身を確認
 			claims := jwt.ExtractClaims(c)
-			return &User{
-				UserName: claims["userID"].(string),
+
+			// ユーザーIDを取得
+			id := claims["userID"].(float64)
+
+			// dbのデータを格納するデータ
+			user := &model.User{}
+
+			// データがあるか確認
+			if err := DB.Where("ID = ?", id).First; err != nil {
+				// 何もなかったら変換する
+				return nil
 			}
+
+			// ログインしたユーザー情報を返す
+			return user
 		},
 
 		// MiddlewareFuncを使うと呼ばれる。
 		// IdentityHandlerで返された値が入る
 		Authorizator: func(data interface{}, c *gin.Context) bool {
-			if v, ok := data.(*User); ok && v.UserName == "admin" {
+			// ログインしたユーザー情報があるか確認
+			if v, ok := data.(*model.User); ok {
+				// ログインしたユーザー情報をginに格納
+				c.Set("currentUser", v)
 				return true
 			}
 
