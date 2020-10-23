@@ -10,7 +10,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 func LoginUser(c *gin.Context) {
@@ -22,19 +21,8 @@ func CreateUser(c *gin.Context) {
 	var req request.User
 	DB := c.MustGet("db").(*gorm.DB)
 
-	validate := validator.New()
-
-	// reqのjsonデータを取得
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// validate
-	if err := validate.Struct(req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	// パラメータを取得する処理
+	util.GetRequest(c, &req)
 
 	// パスワードを暗号化
 	password, err := util.PasswordEncrypt(req.Password)

@@ -12,7 +12,7 @@ func StartRouter() *gin.Engine {
 
 	engine.Use(middleware.SetUp)
 
-	engine.POST("/user", controller.CreateUser)
+	engine.POST("/signup", controller.CreateUser)
 	engine.POST("/login", controller.LoginUser)
 	engine.PATCH("/comment", controller.CreateComment)
 

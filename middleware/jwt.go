@@ -79,6 +79,15 @@ func authMiddleware() *jwt.GinJWTMiddleware {
 			return jwt.MapClaims{}
 		},
 
+		// ログイン時に返すres
+		LoginResponse: func(c *gin.Context, code int, token string, expire time.Time) {
+			c.JSON(code, gin.H{
+				"code":   code,
+				"token":  token,
+				"expire": expire.Format(time.RFC3339),
+			})
+		},
+
 		// ===========================================
 		// Middleware (token確認 +  tokenのデータを取得)
 		// ===========================================
@@ -113,6 +122,7 @@ func authMiddleware() *jwt.GinJWTMiddleware {
 		Authorizator: func(data interface{}, c *gin.Context) bool {
 			// ログインしたユーザー情報があるか確認
 			if v, ok := data.(*model.User); ok {
+
 				// ログインしたユーザー情報をginに格納
 				c.Set("currentUser", v)
 				return true
@@ -130,15 +140,6 @@ func authMiddleware() *jwt.GinJWTMiddleware {
 			c.JSON(code, gin.H{
 				"code":    code,
 				"message": message,
-			})
-		},
-
-		// ログイン時に返すres
-		LoginResponse: func(c *gin.Context, code int, token string, expire time.Time) {
-			c.JSON(code, gin.H{
-				"code":   code,
-				"token":  token,
-				"expire": expire.Format(time.RFC3339),
 			})
 		},
 		// TokenLookup is a string in the form of "<source>:<name>" that is used
