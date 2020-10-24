@@ -24,6 +24,9 @@ func StartRouter() *gin.Engine {
 				"user": "pong",
 			})
 		})
+
+		// トークンを再発行
+		engine.PATCH("/refresh_token", controller.RefreshToken)
 	}
 
 	return engine

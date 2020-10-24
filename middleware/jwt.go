@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"time"
 
 	"app/model"
@@ -9,6 +10,7 @@ import (
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"github.com/theckman/go-securerandom"
 )
 
 var identityKey = "id"
@@ -24,6 +26,9 @@ type User struct {
 	FirstName string
 	LastName  string
 }
+
+// リフレッシュトークン
+var maxRefresh = time.Hour * 24 * 30 * 6
 
 // ユーザー認証
 func authMiddleware() *jwt.GinJWTMiddleware {
@@ -60,6 +65,31 @@ func authMiddleware() *jwt.GinJWTMiddleware {
 				return nil, jwt.ErrFailedAuthentication
 			}
 
+			// 有効期限を発行
+			now := time.Now()
+			expire := now.Add(maxRefresh)
+
+			// ランダムのバイト数を生成（リフレッシュトークンになる）
+			rStr, err := securerandom.Base64OfBytes(64)
+
+			if err != nil {
+				return nil, jwt.ErrFailedAuthentication
+			}
+
+			// リフレッシュトークンのモデル
+			refreshToken := &model.RefreshToken{
+				Token:  rStr,
+				Expire: expire,
+			}
+
+			// リフレッシュトークンをDBに格納
+			if err := DB.Create(refreshToken).Error; err != nil {
+				return nil, jwt.ErrFailedAuthentication
+			}
+
+			// データに格納
+			c.Set("refreshToken", refreshToken)
+
 			// 取得したユーザーを返す
 			return user, nil
 		},
@@ -69,6 +99,7 @@ func authMiddleware() *jwt.GinJWTMiddleware {
 		// Authenticator
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*model.User); ok {
+
 				claims := jwt.MapClaims{
 					"userID": v.ID,
 					"name":   v.Name,
@@ -81,10 +112,14 @@ func authMiddleware() *jwt.GinJWTMiddleware {
 
 		// ログイン時に返すres
 		LoginResponse: func(c *gin.Context, code int, token string, expire time.Time) {
+			// dbを取得
+			refreshToken := c.MustGet("refreshToken").(*model.RefreshToken)
+
 			c.JSON(code, gin.H{
-				"code":   code,
-				"token":  token,
-				"expire": expire.Format(time.RFC3339),
+				"code":         code,
+				"token":        token,
+				"refreshToken": refreshToken.Token,
+				"expire":       expire.Format(time.RFC3339),
 			})
 		},
 
@@ -95,6 +130,7 @@ func authMiddleware() *jwt.GinJWTMiddleware {
 		// MiddlewareFuncを使うと呼ばれる
 		// tokenの中身を確認、idを取得してユーザー情報があるか確認する
 		IdentityHandler: func(c *gin.Context) interface{} {
+
 			// dbを取得
 			DB := c.MustGet("db").(*gorm.DB)
 
@@ -107,8 +143,12 @@ func authMiddleware() *jwt.GinJWTMiddleware {
 			// dbのデータを格納するデータ
 			user := &model.User{}
 
+			fmt.Println(id)
+
 			// データがあるか確認
-			if err := DB.Where("ID = ?", id).First; err != nil {
+			if err := DB.Where("ID = ?", id).First(user).Error; err != nil {
+				fmt.Println("ばか")
+
 				// 何もなかったら変換する
 				return nil
 			}
