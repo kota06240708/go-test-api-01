@@ -14,7 +14,6 @@ func StartRouter() *gin.Engine {
 
 	engine.POST("/signup", controller.CreateUser)
 	engine.POST("/login", controller.LoginUser)
-	engine.PATCH("/comment", controller.CreateComment)
 
 	// jwtのミドルウエアを噛ませる
 	engine.Use(middleware.AuthMiddleware.MiddlewareFunc())
@@ -27,6 +26,9 @@ func StartRouter() *gin.Engine {
 
 		// トークンを再発行
 		engine.PATCH("/refresh_token", controller.RefreshToken)
+
+		// コメントをする
+		engine.PATCH("/comment", controller.CreateComment)
 	}
 
 	return engine

@@ -36,7 +36,7 @@ func authMiddleware() *jwt.GinJWTMiddleware {
 		Realm:      "test zone",
 		Key:        []byte("secret key"),
 		Timeout:    time.Hour * 24 * 30,
-		MaxRefresh: time.Hour * 24 * 30 * 6,
+		MaxRefresh: maxRefresh,
 
 		// ===========================================
 		// ログイン時

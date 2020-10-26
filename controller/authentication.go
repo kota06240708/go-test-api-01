@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"app/middleware"
 	"app/model"
@@ -17,6 +18,8 @@ func RefreshToken(c *gin.Context) {
 	// 型を定義
 	var req = request.RefreshToken{}
 
+	fmt.Println("ばか")
+
 	// DBを定義
 	DB := c.MustGet("db").(*gorm.DB)
 
@@ -26,12 +29,10 @@ func RefreshToken(c *gin.Context) {
 	// RefreshTokenのモデルを定義
 	refreshToken := &model.RefreshToken{}
 
-	if err := DB.First(refreshToken).Error; err != nil {
+	if err := DB.Where("token = ? and expire > ?", req.RefreshToken, time.Now()).First(refreshToken).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"RefreshToken": gin.H{"text": "refreshToken does not match", "tag": "notmatch"}})
 		return
 	}
-
-	fmt.Println(refreshToken)
 
 	// トークンを再発行
 	middleware.AuthMiddleware.RefreshHandler(c)

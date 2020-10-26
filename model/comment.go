@@ -3,7 +3,7 @@ package model
 type Comment struct {
 	Model
 
-	Comment string `json:comment`
-	UserId  int    `json:user_id`
-	User    User   `gorm:"ForeignKey:userID;AssociationForeignKey:ID"`
+	Comment string `json:comment binding:"-"`
+	UserId  uint   `json:user_id binding:"-"`
+	User    *User  `binding:"-"`
 }

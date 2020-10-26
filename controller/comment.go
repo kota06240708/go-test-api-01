@@ -3,46 +3,50 @@ package controller
 import (
 	"net/http"
 
+	"app/model"
 	"app/request"
+	"app/util"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jinzhu/gorm"
 	// "github.com/jinzhu/gorm"
-	"gopkg.in/go-playground/validator.v9"
 )
 
-// ユーザーを作成
+// コメントを追加
 func CreateComment(c *gin.Context) {
 	var req request.Comment
-	// DB := c.MustGet("db").(*gorm.DB)
+	DB := c.MustGet("db").(*gorm.DB)
 
-	validate := validator.New()
+	currentUser := c.MustGet("currentUser").(*model.User)
 
-	// reqのjsonデータを取得
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// validate
-	if err := validate.Struct(req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	// パラメーターを取得
+	util.GetRequest(c, &req)
 
 	// userのデータを格納
-	// comment := model.Comment{
-	// 	UserId:  req.UserId,
-	// 	Comment: req.Comment,
-	// }
+	comment := &model.Comment{
+		UserId:  currentUser.ID,
+		Comment: req.Comment,
+	}
 
-	// userをAPIに格納
-	// if err := DB.Create(&comment).Error; err != nil {
-	// 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	getComment := &[]model.Comment{}
 
-	c.JSON(http.StatusOK, gin.H{
-		"status":  200,
-		"message": req.Comment,
-	})
+	user := &model.User{}
+
+	// コメントをAPIに保存
+	if err := DB.Create(comment).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := DB.Preload("Comment").Preload("Comment.User").Where("ID = ?", currentUser.ID).First(user).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := DB.Find(getComment).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, getComment)
 }
