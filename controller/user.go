@@ -49,5 +49,5 @@ func CreateUser(c *gin.Context) {
 	// パスワードを空にする。
 	req.Password = ""
 
-	c.JSON(http.StatusOK, req)
+	c.JSON(http.StatusOK, &req)
 }

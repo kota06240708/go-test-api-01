@@ -43,10 +43,10 @@ func CreateComment(c *gin.Context) {
 		return
 	}
 
-	if err := DB.Find(getComment).Error; err != nil {
+	if err := DB.Preload("User").Find(&getComment).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, getComment)
+	c.JSON(http.StatusOK, &getComment)
 }
