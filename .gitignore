@@ -10,3 +10,4 @@ db/data/*
 .env
 /app
 /tmp
+/db/data

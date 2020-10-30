@@ -1,11 +1,14 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 
 	"app/model"
 	"app/request"
 	"app/util"
+
+	"github.com/gin-contrib/sessions"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -16,6 +19,15 @@ import (
 func CreateComment(c *gin.Context) {
 	var req request.Comment
 	DB := c.MustGet("db").(*gorm.DB)
+
+	session := sessions.Default(c)
+
+	session.Set("UserId", "1211111")
+	session.Set("Test", "ばか")
+	session.Set("tqnnmnk", "ばか")
+	session.Save()
+
+	fmt.Println(session.Get("tqnnmnk"))
 
 	currentUser := c.MustGet("currentUser").(*model.User)
 
@@ -28,7 +40,7 @@ func CreateComment(c *gin.Context) {
 		Comment: req.Comment,
 	}
 
-	getComment := &[]model.Comment{}
+	getComments := &[]model.Comment{}
 
 	user := &model.User{}
 
@@ -43,10 +55,12 @@ func CreateComment(c *gin.Context) {
 		return
 	}
 
-	if err := DB.Preload("User").Find(&getComment).Error; err != nil {
+	var count int
+
+	if err := DB.Preload("User").Find(&getComments).Count(&count).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, &getComment)
+	c.JSON(http.StatusOK, &user)
 }
